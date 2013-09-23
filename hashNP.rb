@@ -11,22 +11,37 @@ term = '#nowplaying'
 	config.oauth_token_secret = auth['access_token_secret']
 end
 
-
-
-MusicBrainz.configure do |c|
-	c.app_name = "MyMatch"
-	c.app_version = "0.1"
-	c.contact = "my@email.com"
-	c.query_interval = 1.2 # seconds
-	c.tries_limit = 2
-end
+mbauth = YAML.load_file File.dirname(__FILE__) + '/lib/mbauth.yml' # musicbrainz oauth - mbauth.yml contains =>  access_token: your_access_token 
 
 set = @client.search(term, :count => 1).statuses.first; nil
-# in progress
+
+name = set.user.screen_name
+desc = set.user.description
 str = set.text
-stop_array = %w[- by #nowplaying http:// from # 'listening to']
-stopwords_regex = /(?:#{ Regexp.union(stop_array).source })/i
-response = str.split(stopwords_regex).map(&:strip)
+# flag : if user name contains : radio, fm, play (or tweet contains #listenlive - sets flag to true else false
+
+commercial = is_comm(name,str)
+urls, str2 = url_cap(str)
+hashtags = hash_cap(str2)
+tweet_users, str2 = tweet_user_cap(str2) 
+response = art_song_extract(str2)
+
+max = response.length - 1
+
+#mbset = mbsearch(artist_name, track_name, mbauth)
+
+
 puts response
-puts 'actual text =>'
+puts "",'actual text =>',""
 puts set.text
+puts ""," urls => ",""
+puts urls
+puts ""," hashtags => ",""
+puts hashtags
+puts ""," twitter usernames => ",""
+puts tweet_users
+puts ""," screen name => ",""
+puts name
+puts ""
+puts "is this commercial => "
+puts commercial
